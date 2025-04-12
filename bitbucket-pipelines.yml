@@ -1,0 +1,87 @@
+image: node:18
+
+pipelines:
+  branches:
+    master:  # Runs when a PR is merged into master
+      - step:
+          name: Setup SSH Connection
+          script:
+            - echo "🔑 Setting up SSH..."
+            - mkdir -p ~/.ssh
+            - chmod 700 ~/.ssh
+            - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+            - chmod 600 ~/.ssh/id_rsa
+            - ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
+            - ssh-keyscan $LIGHTSAIL_IP_MASTER >> ~/.ssh/known_hosts
+            - echo "✅ SSH setup complete."
+
+      - step:
+          name: Deploy to Production (Master)
+          script:
+            - echo "🚀 Deploying master branch to AWS Lightsail..."
+            - |
+              ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no bitnami@$LIGHTSAIL_IP_MASTER << 'EOF'
+              
+              set -euxo pipefail
+              
+              echo "🔍 Switching to deployment directory..."
+              cd /home/bitnami/rfc-api
+              
+              echo "📥 Fetching latest changes..."
+              git fetch origin
+              git checkout master
+              git pull origin master
+              echo "✅ Code updated!"
+
+              echo "📦 Installing dependencies..."
+              npm install
+              echo "✅ Dependencies installed."
+
+              echo "🚀 Restarting application with PM2..."
+              pm2 restart rfc-gr
+              echo "✅ Application restarted!"
+
+              echo "🎉 Deployment complete!"
+              EOF
+
+    staging:  # Runs when a PR is merged into staging
+      - step:
+          name: Setup SSH Connection
+          script:
+            - echo "🔑 Setting up SSH..."
+            - mkdir -p ~/.ssh
+            - chmod 700 ~/.ssh
+            - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+            - chmod 600 ~/.ssh/id_rsa
+            - ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
+            - ssh-keyscan $LIGHTSAIL_IP_STAGING >> ~/.ssh/known_hosts
+            - echo "✅ SSH setup complete."
+
+      - step:
+          name: Deploy to Staging
+          script:
+            - echo "🚀 Deploying staging branch to AWS Lightsail..."
+            - |
+              ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no bitnami@$LIGHTSAIL_IP_STAGING << 'EOF'
+              
+              set -euxo pipefail
+              
+              echo "🔍 Switching to deployment directory..."
+              cd /home/bitnami/rfc-api
+              
+              echo "📥 Fetching latest changes..."
+              git fetch origin
+              git checkout staging
+              git pull origin staging
+              echo "✅ Code updated!"
+
+              echo "📦 Installing dependencies..."
+              npm install
+              echo "✅ Dependencies installed."
+
+              echo "🚀 Restarting application with PM2..."
+              pm2 restart rfc-staging
+              echo "✅ Application restarted!"
+
+              echo "🎉 Deployment complete!"
+              EOF
