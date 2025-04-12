@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "outDir": "./build",
+        "target": "es2016",
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true
+    },
+    "lib": ["es2015"],
+    "ts-node": {
+        "esm": true,
+        "compilerOptions": {
+            "module": "CommonJS"
+        }
+    }
+}
