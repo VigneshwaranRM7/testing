@@ -1,33 +1,20 @@
-FROM node:20-buster
-# Set the working directory in the container
+# Use official Node.js image
+FROM node:18-slim
+
+# Create app directory
 WORKDIR /app
 
-# Install dependencies for Chromium and Puppeteer
-RUN apt-get update && apt-get install -y \
-    chromium \
-    libnss3 \
-    libfreetype6 \
-    fontconfig \
-    ttf-dejavu \
-    libx11-6 \
-    libxkbfile1 \
-    libsecret-1-0 \
-    libxss1 \
-    dbus \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    pango1.0-0 \
-    libgdk-pixbuf2.0-0 \
-    libcups2 \
-    libxtst6 \
-    && apt-get clean
-
-# Set the environment variable for Puppeteer to know where to find Chromium
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-
+# Install app dependencies
+# Only copy package.json first to leverage Docker layer caching
 COPY package*.json ./
-RUN npm install
+
+RUN npm ci --omit=dev
+
+# Bundle app source
 COPY . .
-RUN npm run build
+
+# Expose the port (adjust if needed)
 EXPOSE 8080
-CMD ["npm","start"]
+
+# Start your app (adjust based on your start script)
+CMD [ "npm", "start" ]
