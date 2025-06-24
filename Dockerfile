@@ -1,20 +1,20 @@
-# Use official Node.js image
+# Use official slim version of Node.js
 FROM node:18-slim
 
-# Create app directory
+# Create and set working directory
 WORKDIR /app
 
-# Install app dependencies
-# Only copy package.json first to leverage Docker layer caching
+# Copy only package files first (for caching)
 COPY package*.json ./
 
+# Install only production dependencies
 RUN npm ci --omit=dev
 
-# Bundle app source
+# Copy rest of the application code
 COPY . .
 
-# Expose the port (adjust if needed)
+# Expose the port Cloud Run will listen on
 EXPOSE 8080
 
-# Start your app (adjust based on your start script)
-CMD [ "npm", "start" ]
+# Start the app using the production script
+CMD ["npm", "start"]
